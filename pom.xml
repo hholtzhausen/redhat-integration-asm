@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.acme.pod</groupId>
+  <artifactId>redhat-integration-asm</artifactId>
+  <version>1.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+<!-- test -->
+  <parent>
+    <groupId>io.bitbuild.poms</groupId>
+    <artifactId>ocp4-deployment-parent</artifactId>
+    <version>1.1-SNAPSHOT</version>
+  </parent>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+<!-- labels and annotations -->
+    <k8s-name>bitbuild-fitcamel</k8s-name>
+    <k8s-component>integration</k8s-component>
+    <ocp-runtime>quarkus</ocp-runtime>
+
+<!-- pod template, service and route -->
+    <k8s-replicas>1</k8s-replicas>
+    <k8s-containerPort>8080</k8s-containerPort>
+    <k8s-svcProtocol>TCP</k8s-svcProtocol>
+    <k8s-probe-failureThreshold>3</k8s-probe-failureThreshold>
+    <k8s-probe-initialDelaySeconds>30</k8s-probe-initialDelaySeconds>
+    <k8s-probe-periodSeconds>20</k8s-probe-periodSeconds>
+    <k8s-probe-successThreshold>1</k8s-probe-successThreshold>
+    <k8s-probe-timeoutSeconds>1</k8s-probe-timeoutSeconds>
+    <k8s-probe-scheme>HTTP</k8s-probe-scheme>
+    <k8s-probe-livenessPath>/q/health/live</k8s-probe-livenessPath>
+    <k8s-probe-livenessPort>${k8s-containerPort}</k8s-probe-livenessPort>
+    <k8s-probe-readinessPath>/q/health/ready</k8s-probe-readinessPath>
+    <k8s-probe-readinessPort>${k8s-containerPort}</k8s-probe-readinessPort>
+    <!-- 
+    <k8s-registry-host>registry.9thbit.dev</k8s-registry-host>
+    <k8s-resources-memory-request>2Gi</k8s-resources-memory-request>
+    <k8s-resources-cpu-request>2000m</k8s-resources-cpu-request>
+    <k8s-resources-memory-limit>3Gi</k8s-resources-memory-limit>
+    <k8s-resources-cpu-limit>2500m</k8s-resources-cpu-limit>
+     -->
+<!-- Graylog -->
+    <gelf-host>tcp:graylog.graylog-system.svc</gelf-host>
+    <gelf-port>12201</gelf-port>
+    <gelf-mdc>-Dquarkus.log.handler.gelf.include-full-mdc=true</gelf-mdc>
+    <gelf-env>-Dquarkus.log.handler.gelf.additional-field.environment.value=${environment}</gelf-env>
+    <gelf-name>-Dquarkus.log.handler.gelf.additional-field.name.value=${k8s-name}</gelf-name>
+    <gelf-comp>-Dquarkus.log.handler.gelf.additional-field.component.value=${k8s-component}</gelf-comp>
+    <gelf-version>-Dquarkus.log.handler.gelf.additional-field.version.value=${project.version}</gelf-version>
+    <gelf-partof>-Dquarkus.log.handler.gelf.additional-field.partof.value=${project.parent.artifactId}</gelf-partof>
+
+    <k8s-env-java-options>${gelf-mdc} ${gelf-env} ${gelf-name} ${gelf-comp} ${gelf-version} ${gelf-partof}</k8s-env-java-options>
+  </properties>
+
+  <modules>
+    <module>app-config</module>
+    <module>customer-party</module>
+    <module>person-party</module>
+    <module>person-ws</module>
+    <module>party-api</module>
+  </modules>
+
+  <profiles>
+    <profile>
+      <id>prod</id>
+      <properties>
+        <oc-api>https://api-int.crc.testing:6443</oc-api>
+        <oc-namespace>middleware</oc-namespace>
+        <oc-insecure-skip-tls-verify>true</oc-insecure-skip-tls-verify>
+
+        <!-- custom config map -->
+        <quarkus-profile>prod</quarkus-profile>
+        <environment>prod</environment>
+      </properties>
+    </profile>
+    <profile>
+      <id>dr</id>
+      <properties>
+        <oc-api>https://api-int.crc.testing:6443</oc-api>
+        <oc-namespace>middleware</oc-namespace>
+        <oc-insecure-skip-tls-verify>true</oc-insecure-skip-tls-verify>
+
+        <!-- custom config map -->
+        <quarkus-profile>dr</quarkus-profile>
+        <environment>dr</environment>
+      </properties>
+    </profile>
+    <profile>
+      <id>test</id>
+      <properties>
+        <oc-api>https://api-int.crc.testing:6443</oc-api>
+<!--
+        <oc-api>https://192.168.1.21:6443</oc-api>
+-->
+        <oc-namespace>middleware</oc-namespace>
+        <oc-insecure-skip-tls-verify>true</oc-insecure-skip-tls-verify>
+
+        <!-- custom config map -->
+        <quarkus-profile>test</quarkus-profile>
+        <environment>test</environment>
+<!--
+        <k8s-dns-domain>apps-k3s.testing</k8s-dns-domain>
+-->
+      </properties>
+    </profile>
+    <profile>
+      <id>aws</id>
+      <properties>
+        <oc-token>xxxxx</oc-token>
+        <oc-api>https://api.ocp-mesh.9thbit.co:6443</oc-api>
+        <oc-namespace>bitbuild</oc-namespace>
+        <oc-insecure-skip-tls-verify>true</oc-insecure-skip-tls-verify>
+        <!-- custom config map -->
+        <quarkus-profile>prod</quarkus-profile>
+        <environment>prod</environment>
+      </properties>
+    </profile>
+  </profiles>
+</project>
