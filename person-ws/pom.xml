@@ -53,9 +53,9 @@
             <directory>${project.build.directory}/resource-templates-staging</directory>
             <filtering>true</filtering>
             <includes>
-              <include>ocp/deployment.yaml</include>
-<!--
               <include>ocp/deployment-resources.yaml</include>
+<!--
+              <include>ocp/deployment.yaml</include>
               <include>ocp/route.yaml</include>
                 <include>k8s/deployment.yaml</include>
                 <include>k8s/ingress.yaml</include>
